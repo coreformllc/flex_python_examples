@@ -1,6 +1,7 @@
 #!python3
 
 import os
+import pathlib
 import argparse
 import numpy
 import scipy
@@ -21,7 +22,7 @@ def cli_arguments( parser ):
     return parser.parse_args()
 
 script_relative = mk_script_relative( __file__ )
-top_wd = os.getcwd()
+top_wd = pathlib.Path( os.getcwd() ).as_posix()
 log_file = "optimization_monitor.log"
 yield_stress = 36260 # PSI
 
@@ -63,14 +64,14 @@ def evaluate_constraint( radius, args ):
     return con_value
 
 def get_max_displacement():
-    probe_filename = os.path.join( top_wd, "cf_iga_data_output.json" )
+    probe_filename = pathlib.Path( os.path.join( top_wd, "cf_iga_data_output.json" ) ).as_posix()
     with open( probe_filename ) as probe_file:
         probe_data = json.load( probe_file )['pull']['history']
         max_displacement = probe_data['disp_probe']['displacement']['x'][-1][-1]
     return max_displacement
 
 def get_max_stress():
-    probe_filename = os.path.join( top_wd, "cf_iga_data_output.json" )
+    probe_filename = pathlib.Path( os.path.join( top_wd, "cf_iga_data_output.json" ) ).as_posix()
     with open( probe_filename ) as probe_file:
         probe_data = json.load( probe_file )['pull']['history']
         max_stress = probe_data['stress_probe']['stress']['max_principal'][-1][-1]
