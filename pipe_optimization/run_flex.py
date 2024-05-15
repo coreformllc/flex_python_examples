@@ -2,7 +2,6 @@ import os
 import math
 import json
 import coreform_utils
-flex = coreform_utils.import_flex()
 
 import make_cad
 initial_params = make_cad.initial_params
@@ -20,6 +19,7 @@ def main( eval_dir, x, options ):
         return 1000, 1.0, False
 
 def flex_commands( eval_dir, params, options ):
+    flex = coreform_utils.import_flex()
     flex.cmd( 'reset' )
 
     cf_file = os.path.join( eval_dir, "pipe.cf" )
@@ -161,6 +161,7 @@ def flex_commands( eval_dir, params, options ):
     flex.cmd( f'job pipe_evaluation simulation processor_count {int( options.np )}' )
     flex.cmd( 'job pipe_evaluation submit' )
     flex.cmd( 'job pipe_evaluation wait' )
+    flex.shutdown()
 
 def get_max_mises_stress( eval_dir ):
     probe_filename = os.path.join( eval_dir, 'cf_iga_data_output.json' )

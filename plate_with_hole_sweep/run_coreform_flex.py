@@ -136,3 +136,4 @@ def main( args ):
     flex.cmd(f'job {jobname} simulation processor_count {args["ni"]}' )
     flex.cmd(f'job {jobname} submit' )
     flex.cmd(f'job {jobname} wait' )
+    flex.shutdown()
