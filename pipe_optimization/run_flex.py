@@ -1,6 +1,6 @@
 import os
 import math
-import pyjson5
+import json
 import coreform_utils
 flex = coreform_utils.import_flex()
 
@@ -165,7 +165,7 @@ def flex_commands( eval_dir, params, options ):
 def get_max_mises_stress( eval_dir ):
     probe_filename = os.path.join( eval_dir, 'cf_iga_data_output.json' )
     with open( probe_filename ) as probe_file:
-        output_data = pyjson5.decode_io(probe_file)['push']
+        output_data = json.decode_io(probe_file)['push']
         probe_data = output_data['history']
         max_mises_stress = probe_data['max_mises']['extremum']['stress']['von_mises'][-1]
     return max_mises_stress

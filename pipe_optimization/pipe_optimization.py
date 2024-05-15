@@ -1,6 +1,7 @@
 #!python3
 
 import os
+import pathlib
 import argparse
 import numpy
 import pandas
@@ -31,7 +32,7 @@ sim_id = 0
 obj_id = 0
 sim_base_name = 'simulation'
 yield_stress = 700e6
-top_wd = os.getcwd()
+top_wd = pathlib.Path( os.getcwd() ).as_posix()
 
 initial_params = {
                     "pipe_inner_radius": 60.0,
@@ -136,7 +137,7 @@ def evaluate_iteration( x ):
     global sim_id
     sim_id += 1
     eval_dir = f'{sim_base_name}_{sim_id}'
-    subdir = os.path.join(top_wd, eval_dir )
+    subdir = pathlib.Path( os.path.join(top_wd, eval_dir ) ).as_posix()
     if not os.path.exists(subdir):
         os.makedirs(subdir)
     os.chdir(subdir)
