@@ -27,7 +27,7 @@ yield_stress = 36260 # PSI
 def main( args ):
     args = vars( args )
     args["top_wd"] = pathlib.Path( top_wd ).as_posix()
-    N = 10
+    N = 4
     radius_list = numpy.linspace( 0.1, 24.9, N )
     displacement_list = numpy.zeros( N )
     max_stress_list = numpy.zeros( N )
@@ -37,6 +37,9 @@ def main( args ):
         run_coreform_flex.main( args )
         displacement_list[i] = get_max_displacement()
         max_stress_list[i] = get_max_stress()
+    print( radius_list )
+    print( displacement_list )
+    print( max_stress_list )
 
 def get_max_displacement():
     probe_filename = os.path.join( top_wd, "cf_iga_data_output.json" )
