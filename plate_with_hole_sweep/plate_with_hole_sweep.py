@@ -12,8 +12,8 @@ from coreform_utils import mk_script_relative
 parser = argparse.ArgumentParser( prog='PlateWithHoleSweep' )
 
 def cli_arguments( parser ):
-    parser.add_argument( "-nt", dest="nt", type=int, default=16 )
-    parser.add_argument( "-ni", dest="ni", type=int, default=16 )
+    parser.add_argument( "-nt", dest="nt", type=int, default=1 )
+    parser.add_argument( "-ni", dest="ni", type=int, default=1 )
     parser.add_argument( "--strategy", dest="strategy", type=str, choices=["bodyfit", "immersed"], default="immersed" )
     parser.add_argument( "--mesh-size", dest="mesh_size", type=float, default=4 )
     parser.add_argument( "--degree", dest="degree", type=int, default=4 )
