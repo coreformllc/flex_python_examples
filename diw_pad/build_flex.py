@@ -1,12 +1,23 @@
 import os
 import math
+import decimal
 import read_geometry_dimensions
 import coreform_utils
 
 def flex_commands( options ):
-    flex = coreform_utils.import_flex( verbose=False )
+    flex = coreform_utils.import_flex( verbose=True )
     params = options["params"]
-    pad_height, pad_volume_ratio, platen_width, top_platen_y_probe = read_geometry_dimensions.main( os.getcwd() )
+    pad_height, pad_volume_ratio, platen_width, top_platen_y_probe = read_geometry_dimensions.main()
+    pad_compression_distance = -0.9 * pad_height * ( 1 - pad_volume_ratio )
+    top_platen_velocity = abs( pad_compression_distance / 1.0 )
+    degree = params['degree']
+    mesh_size = params['mesh_size']
+    contact_activation_distance = 0.5 * mesh_size
+    max_time_step = contact_activation_distance / top_platen_velocity
+    print( f"Max Time Step from Heuristic: {max_time_step} time-units" )
+    max_time_step = round_to_sf( max_time_step, 2, decimal.ROUND_DOWN )
+    print( f"Max Time Step from Heuristic: {max_time_step} time-units" )
+
 
     flex.cmd("reset")
 
@@ -35,7 +46,7 @@ def flex_commands( options ):
 
     ############### DEFINE SIMULATION PARAMETERS ###############
 
-    flex.cmd( f'coreform_iga_version {flex.version_short()}' )
+    flex.cmd( f'coreform_iga_version "{flex.version_short()}"' )
     flex.cmd( 'label "diw_compression"' )
 
     use_stabilization = params['stabilization']
@@ -68,7 +79,6 @@ def flex_commands( options ):
     flex.cmd( 'flex_models flex_inf parts pad_instance part pad' )
     flex.cmd( 'flex_models flex_inf parts pad_instance material se1700' )
     flex.cmd( 'flex_models flex_inf parts pad_instance material_model neohookean' )
-    # flex.cmd(f'flex_models flex_inf parts pad_instance quadrature_options optimized_cut_quadrature_degree {degree+2}')
 
     flex.cmd( 'flex_models flex_inf parts top_platen_instance new' )
     flex.cmd( 'flex_models flex_inf parts top_platen_instance part top_platen' )
@@ -155,7 +165,6 @@ def flex_commands( options ):
     flex.cmd( 'linear_equation_solvers direct_multifrontal direct multi_frontal' )
 
     ## BOUNDARY CONDITIONS
-    pad_compression_distance = -0.75 * pad_height * ( 1 - pad_volume_ratio )
     flex.cmd( 'solid_mechanics_definitions boundary_conditions x_symmetry_pad new' )
     flex.cmd( 'solid_mechanics_definitions boundary_conditions x_symmetry_pad displacement components 0 x' )
     flex.cmd( 'solid_mechanics_definitions boundary_conditions x_symmetry_pad displacement function constant_1' )
@@ -197,7 +206,6 @@ def flex_commands( options ):
     flex.cmd( 'solid_mechanics_definitions interactions contact mechanical_contact base_contact complement true' )
     flex.cmd( 'solid_mechanics_definitions interactions contact mechanical_contact interaction_properties "coulomb_friction_contact"')
 
-    top_platen_velocity = 1.0 / ( pad_compression_distance )
     flex.cmd( 'solid_mechanics_definitions interaction_properties coulomb_friction_contact new')
     flex.cmd( 'solid_mechanics_definitions interaction_properties coulomb_friction_contact coulomb_friction coefficient_with_regularization friction_coefficient 0.3')
     flex.cmd(f'solid_mechanics_definitions interaction_properties coulomb_friction_contact coulomb_friction coefficient_with_regularization regularization_velocity {0.1 * abs( top_platen_velocity )}')
@@ -210,8 +218,6 @@ def flex_commands( options ):
     flex.cmd( 'solid_mechanics_definitions outputs pad_field_results field variables displacement 1 y' )
     flex.cmd( 'solid_mechanics_definitions outputs pad_field_results field variables displacement 2 z' )
     flex.cmd( 'solid_mechanics_definitions outputs pad_field_results field variables stress 0 all' )
-    # flex.cmd( 'solid_mechanics_definitions outputs pad_field_results field variables deformation_gradient 0 determinant')
-    # flex.cmd( 'solid_mechanics_definitions outputs pad_field_results field element_variable_output_strategy min')
     flex.cmd( 'solid_mechanics_definitions outputs pad_field_results field element_variable_output_strategy interpolate' )
 
     flex.cmd( 'solid_mechanics_definitions outputs top_platen_field_results new' )
@@ -261,7 +267,6 @@ def flex_commands( options ):
         flex.cmd( 'procedures compress_pad solid_mechanics time_stepping_method nonlinear_quasistatics' )
     elif params["solver"] == "quasistatic":
         flex.cmd( 'procedures compress_pad solid_mechanics time_stepping_method implicit_dynamics_numerical_damping' )
-        # flex.cmd( 'procedures compress_pad solid_mechanics time_stepping_method implicit_dynamics_quasistatic' )
     elif params["solver"] == "dynamic":
         flex.cmd( 'procedures compress_pad solid_mechanics time_stepping_method implicit_dynamic' )
 
@@ -292,3 +297,13 @@ def flex_commands( options ):
     flex.cmd( f'job "{test_name}" simulation processor_count {num_proc}' )
     flex.cmd( f'job "{test_name}" submit' )
     flex.cmd( f'job "{test_name}" wait' )
+
+def round_to_sf( value, sig_figs, rounding_mode ):
+    """Rounds value to sig_figs significant figures using the specified rounding mode."""
+    if value == 0:
+        return 0  # Avoid log10 issues with zero
+    d_value = decimal.Decimal( value )
+    exponent = decimal.Decimal( sig_figs - 1 - d_value.log10().to_integral_value( decimal.ROUND_FLOOR ) )
+    quant = decimal.Decimal( 10 ) ** ( -exponent )
+    val = float( d_value.quantize( quant, rounding=rounding_mode ) )
+    return val
